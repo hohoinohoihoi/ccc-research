@@ -1,0 +1,35 @@
+name: weekly-chatwork-post
+
+# 毎週日曜 20:00 JST（= 11:00 UTC）に「今週の実践」を投稿する。
+# ChatWork API には予約送信が無いため、cron で時刻を作り、その日の対象メッセージだけ投稿する。
+# 手動実行（workflow_dispatch）では DRY_RUN や日付指定でテストできる。
+on:
+  schedule:
+    - cron: "0 11 * * 0"   # UTC日曜11:00 = JST日曜20:00（cronは数分の遅延あり）
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1なら投稿せず内容表示のみ（顧客接点に触れない安全確認）"
+        required: false
+        default: "1"
+      force_date:
+        description: "YYYY-MM-DD（テスト用。その日付の投稿を対象にする）"
+        required: false
+        default: ""
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Post today's message (if scheduled)
+        env:
+          CHATWORK_API_TOKEN: ${{ secrets.CHATWORK_API_TOKEN }}
+          CHATWORK_ROOM_ID: ${{ secrets.CHATWORK_ROOM_ID }}
+          # 手動実行時は入力の dry_run を使用。cron 実行時は本番投稿（DRY_RUN=空）。
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || '' }}
+          FORCE_DATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_date || '' }}
+        run: python scripts/post_chatwork.py
