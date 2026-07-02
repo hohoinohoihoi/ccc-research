@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone, timedelta
@@ -37,18 +38,22 @@ def today_jst() -> str:
 
 
 def load_message_for(date_str: str) -> tuple[str, str] | None:
-    """schedule.json から date_str に対応する (ファイル名, 本文) を返す。無ければ None。"""
+    """schedule.json から date_str に対応する (ファイル名, 本文) を返す。
+    その日の割り当てが無ければ None（＝正常にスキップ）。
+    設定ファイルの欠損・JSON破損・参照先メッセージの欠損は「異常」として例外を投げ、
+    呼び出し側が exit 1 にする（無人運用で沈黙して見逃さないため）。"""
     if not SCHEDULE.exists():
-        print(f"[warn] schedule.json が見つかりません: {SCHEDULE}", file=sys.stderr)
-        return None
-    schedule = json.loads(SCHEDULE.read_text(encoding="utf-8"))
+        raise FileNotFoundError(f"必須ファイルがありません: {SCHEDULE}（誤削除・rebase等を疑う）")
+    try:
+        schedule = json.loads(SCHEDULE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"schedule.json のJSONが不正です: {e}") from e
     entry = schedule.get(date_str)
     if not entry:
         return None
     msg_path = ROOT / "posts" / entry
     if not msg_path.exists():
-        print(f"[error] メッセージファイルが見つかりません: {msg_path}", file=sys.stderr)
-        return None
+        raise FileNotFoundError(f"スケジュール済みのメッセージファイルがありません: {msg_path}")
     return entry, msg_path.read_text(encoding="utf-8")
 
 
@@ -59,13 +64,29 @@ def post_to_chatwork(room_id: str, token: str, body: str) -> None:
         url, data=data, method="POST",
         headers={"X-ChatWorkToken": token, "Content-Type": "application/x-www-form-urlencoded"},
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        print(f"[ok] posted (HTTP {resp.status}): {resp.read().decode('utf-8', 'replace')[:200]}")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            print(f"[ok] posted (HTTP {resp.status}): {resp.read().decode('utf-8', 'replace')[:200]}")
+    except urllib.error.HTTPError as e:
+        detail = ""
+        try:
+            detail = e.read().decode("utf-8", "replace")[:300]
+        except Exception:
+            pass
+        # 429/500 等。無人運用でも失敗が Actions 上で赤くなるよう非0終了。
+        raise SystemExit(f"[error] ChatWork API がエラーを返しました (HTTP {e.code} {e.reason}): {detail}")
+    except urllib.error.URLError as e:
+        raise SystemExit(f"[error] ChatWork API へ接続できませんでした: {e.reason}")
 
 
 def main() -> int:
     date_str = today_jst()
-    found = load_message_for(date_str)
+    try:
+        found = load_message_for(date_str)
+    except (FileNotFoundError, ValueError) as e:
+        # 設定欠損・破損は「異常」→ 非0終了で Actions に赤アラートを出す
+        print(f"[error] {e}", file=sys.stderr)
+        return 1
     if found is None:
         print(f"[skip] {date_str} に割り当てられた投稿はありません。何もしません。")
         return 0  # 何もしないのは正常（毎週日曜に走っても、対象日でなければスキップ）

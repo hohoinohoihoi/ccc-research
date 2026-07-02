@@ -1,2 +1,6 @@
 # ZIP はGitに含めず、GitHub Releases の資産として配布する（リポジトリを軽く保つ）
 ccc-research.zip
+
+# Python
+__pycache__/
+*.pyc
