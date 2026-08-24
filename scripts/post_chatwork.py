@@ -40,7 +40,8 @@ def today_jst() -> str:
 def load_message_for(date_str: str) -> tuple[str, str] | None:
     """schedule.json から date_str に対応する (ファイル名, 本文) を返す。
     その日の割り当てが無ければ None（＝正常にスキップ）。
-    設定ファイルの欠損・JSON破損・参照先メッセージの欠損は「異常」として例外を投げ、
+    設定ファイルの欠損・JSON破損・参照先メッセージの欠損、および
+    「対象日以降の割り当てが一つも無い（＝配信在庫が尽きた）」状態は「異常」として例外を投げ、
     呼び出し側が exit 1 にする（無人運用で沈黙して見逃さないため）。"""
     if not SCHEDULE.exists():
         raise FileNotFoundError(f"必須ファイルがありません: {SCHEDULE}（誤削除・rebase等を疑う）")
@@ -48,8 +49,19 @@ def load_message_for(date_str: str) -> tuple[str, str] | None:
         schedule = json.loads(SCHEDULE.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         raise ValueError(f"schedule.json のJSONが不正です: {e}") from e
+    if not isinstance(schedule, dict):
+        raise ValueError(f"schedule.json は日付→ファイル名の対応表（オブジェクト）である必要があります: {type(schedule).__name__}")
     entry = schedule.get(date_str)
     if not entry:
+        # 「対象日の割り当てが無い」だけなら正常なスキップ。
+        # ただし対象日以降の割り当てが一つも無い＝配信在庫が尽きているなら、
+        # 沈黙させず異常として知らせる（在庫切れの検知。無人運用で涸れたまま気づかないのを防ぐ）。
+        if not any(k >= date_str for k in schedule):
+            last = max(schedule) if schedule else "なし"
+            raise ValueError(
+                f"配信在庫が尽きています（最後の割り当て: {last}）。"
+                f"posts/ に次の文面を追加し、schedule.json に登録してください。"
+            )
         return None
     msg_path = ROOT / "posts" / entry
     if not msg_path.exists():
