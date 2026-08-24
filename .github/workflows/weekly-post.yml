@@ -6,6 +6,7 @@ name: weekly-chatwork-post
 on:
   schedule:
     - cron: "0 11 * * 0"   # UTC日曜11:00 = JST日曜20:00（cronは数分の遅延あり）
+    - cron: "0 11 24 8 *"  # 一回限り：2026-08-24（月）JST20:00 に week5 を配信するための臨時発火。配信後に削除してよい（残っても該当日の割り当てが無ければ skip で無害）
   workflow_dispatch:
     inputs:
       dry_run:
