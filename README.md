@@ -71,6 +71,7 @@ GitHub の **Settings → Secrets and variables → Actions** で、次の2つ�
 | 2026-07-26 | posts/2026-07-26_week3.md（情報は全部渡す） |
 | 2026-08-02 | posts/2026-08-02_week4.md（ナレッジを育てる＋調べもの道具＝この配布） |
 | 2026-08-24 | posts/2026-08-24_week5.md（ワークスペースという作業場） |
+| 2026-09-01 | posts/2026-09-01_week6.md（確かめる技術） |
 
 ---
 
