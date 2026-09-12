@@ -2,7 +2,7 @@
 """ChatWork へ「今週の実践」メッセージを投稿する（スケジューラから呼ばれる）。
 
 - ChatWork API には実用的な予約送信エンドポイントが無いため、
-  GitHub Actions の cron（毎週日曜 11:00 UTC = 20:00 JST）から本スクリプトを起動し、
+  GitHub Actions の cron（毎週水曜 11:00 UTC = 20:00 JST）から本スクリプトを起動し、
   posts/schedule.json で「今日（JST）の日付」に割り当てられたメッセージを投稿する。
 - トークン・ルームIDは環境変数（GitHub Secrets）から読む。コードには絶対に書かない。
 - DRY_RUN=1 のときは投稿せず内容を表示するだけ（顧客接点に触れない安全確認用）。
@@ -101,7 +101,7 @@ def main() -> int:
         return 1
     if found is None:
         print(f"[skip] {date_str} に割り当てられた投稿はありません。何もしません。")
-        return 0  # 何もしないのは正常（毎週日曜に走っても、対象日でなければスキップ）
+        return 0  # 何もしないのは正常（毎週水曜に走っても、対象日でなければスキップ）
 
     entry, body = found
     dry = os.environ.get("DRY_RUN", "").strip() == "1"

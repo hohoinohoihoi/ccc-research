@@ -1,11 +1,13 @@
 name: weekly-chatwork-post
 
-# 毎週日曜 20:00 JST（= 11:00 UTC）に「今週の実践」を投稿する。
+# 毎週水曜 20:00 JST（= 11:00 UTC）に「今週の実践」を投稿する。
+# 火曜20:30の定例作業会の翌日に配信することで、その回の内容をもとにした
+# 章選定（照合レポート）を新鮮なうちに届ける（2026-09-13、宮本さん指示で日曜から変更）。
 # ChatWork API には予約送信が無いため、cron で時刻を作り、その日の対象メッセージだけ投稿する。
 # 手動実行（workflow_dispatch）では DRY_RUN や日付指定でテストできる。
 on:
   schedule:
-    - cron: "0 11 * * 0"   # UTC日曜11:00 = JST日曜20:00（cronは数分の遅延あり）
+    - cron: "0 11 * * 3"   # UTC水曜11:00 = JST水曜20:00（cronは数分の遅延あり）
   workflow_dispatch:
     inputs:
       dry_run:
