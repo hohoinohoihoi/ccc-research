@@ -73,6 +73,7 @@ GitHub の **Settings → Secrets and variables → Actions** で、次の2つ�
 | 2026-08-24 | posts/2026-08-24_week5.md（ワークスペースという作業場） |
 | 2026-09-01 | posts/2026-09-01_week6.md（確かめる技術） |
 | 2026-09-11 | posts/2026-09-11_week7.md（自分専用AIを作る） |
+| 2026-09-23 | posts/2026-09-23_week8.md（プロンプト） |
 
 ---
 
