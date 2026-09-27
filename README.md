@@ -3,7 +3,7 @@
 このリポジトリは2つの役割を持ちます。
 
 1. **配布**：調べものスキル `ccc-research` を、メンバーが1クリックでダウンロードできる場所（GitHub Releases）。
-2. **半自動投稿**：毎週水曜20:00（JST）に「今週の実践」を ChatWork へ自動投稿（GitHub Actions）。
+2. **半自動投稿**：毎週水曜9:00（JST）に「今週の実践」を ChatWork へ自動投稿（GitHub Actions）。
 
 > 運営の考え方は CCC 本体リポジトリの `docs/ccc-membership-ops-rhythm.md` を参照。
 
@@ -31,7 +31,7 @@ gh release upload v0.2 ccc-research.zip --clobber
 
 ChatWork API には実用的な予約送信機能が無いため、**GitHub Actions の cron で時刻を作り**、その日に割り当てた本文だけを投稿します。
 
-- スケジュール：`.github/workflows/weekly-post.yml`（毎週水曜 11:00 UTC = 20:00 JST。cronは数分の遅延あり）
+- スケジュール：`.github/workflows/weekly-post.yml`（毎週水曜 0:00 UTC = 9:00 JST。cronは数分〜数時間の遅延あり得る）
 - 投稿ロジック：`scripts/post_chatwork.py`（`posts/schedule.json` で「今日(JST)の日付」に対応する本文を投稿）
 - 本文：`posts/YYYY-MM-DD_*.md`、対応表：`posts/schedule.json`
 
@@ -53,7 +53,7 @@ GitHub の **Settings → Secrets and variables → Actions** で、次の2つ�
 1. **Actions → weekly-chatwork-post → Run workflow** を開く。
 2. `dry_run = 1`（既定）、`force_date` に schedule.json にある日付（例 `2026-08-24`）を入れて実行 → **投稿されず、本文がログに表示**されるだけ。中身を確認。
 3. 実際に1本だけ自分宛に試したいときは、`CHATWORK_ROOM_ID` を一時的に**自分のマイチャット等のルームID**にし、`dry_run = 0`、`force_date` に同じ日付を入れて実行 → 自分にだけ届く。
-4. 問題なければ `CHATWORK_ROOM_ID` を**メンバーグループのID**に戻す。以後は毎週水曜20:00に自動投稿。
+4. 問題なければ `CHATWORK_ROOM_ID` を**メンバーグループのID**に戻す。以後は毎週水曜9:00に自動投稿。
 
 > ⚠️ **二重投稿に注意**：このスクリプトは投稿履歴を持ちません（同じ日に2回走れば2回投稿します）。同じ日付で、cron の自動実行と手動実行（`dry_run=0`）が重ならないように。手動テストは `dry_run=1`、または `CHATWORK_ROOM_ID` を自分のルームにしてから行ってください。
 > API失敗（429/500・接続不可）・`schedule.json` の欠損/破損時は、スクリプトが**非0終了して Actions が赤く失敗**します（沈黙して見逃さないため）。その週の投稿は行われないので、直して再実行してください。
@@ -64,7 +64,7 @@ GitHub の **Settings → Secrets and variables → Actions** で、次の2つ�
 - 止める：そのワークフローを Actions 画面で **Disable**（または該当日付の行を schedule.json から消す）。
 
 ### 配信履歴・予定
-| 日付(JST 20:00) | 本文 |
+| 日付 | 本文 |
 |---|---|
 | 2026-07-11 | posts/2026-07-11_week1.md（最初の仕事） |
 | 2026-07-19 | posts/2026-07-19_week2.md（すり合わせ） |
@@ -73,7 +73,7 @@ GitHub の **Settings → Secrets and variables → Actions** で、次の2つ�
 | 2026-08-24 | posts/2026-08-24_week5.md（ワークスペースという作業場） |
 | 2026-09-01 | posts/2026-09-01_week6.md（確かめる技術） |
 | 2026-09-11 | posts/2026-09-11_week7.md（自分専用AIを作る） |
-| 2026-09-23 | posts/2026-09-23_week8.md（プロンプト） |
+| 2026-09-27 | posts/2026-09-27_week8.md（プロンプト。9/23に自動配信を試みたが、時刻設定の不具合で失敗し手動配信） |
 
 ---
 
